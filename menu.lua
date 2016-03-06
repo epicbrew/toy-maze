@@ -27,7 +27,7 @@ local function onPlayBtnRelease()
         }
     }
 	--composer.gotoScene( "maze", "fade", 500 )
-    composer.gotoScene( "maze", options )
+    composer.gotoScene( "level", options )
 
 	return true	-- indicates successful touch
 end

@@ -1,5 +1,5 @@
 --
--- maze.lua
+-- level.lua
 --
 
 local composer = require( "composer" )
@@ -189,7 +189,7 @@ function scene:create( event )
     print("--->", #level.maze, #level.maze[1])
 
     local mazeRows, mazeCols = #level.maze, #level.maze[1]
-    local displayRows, displayCols = mazeRows*2+2, mazeCols*2+1
+    local displayRows, displayCols = mazeRows*2+1, mazeCols*2+1
     local cellSize = getOptimalCellSize(displayRows, displayCols)
 
     local mazeGroup = display.newGroup()
