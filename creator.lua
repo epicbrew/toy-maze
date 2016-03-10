@@ -48,11 +48,11 @@ function init_maze(rows, cols)
                 maze[r][c] = SW_WALL
             elseif (r == max_rows) and (c == max_cols)  then
                 maze[r][c] = SE_WALL
-            elseif (r == 1) then
+            elseif (r == 1 or r == max_rows) then
                 maze[r][c] = H_WALL
-            elseif (c == 1) then
+            elseif (c == 1 or c == max_cols) then
                 maze[r][c] = V_WALL
-            elseif (r % 2) then
+            elseif (r % 2 == 1 or c % 2 == 1) then
                 maze[r][c] = WALL
             else
                 maze[r][c] = UNVISITED
@@ -101,7 +101,6 @@ end
 
 function create_maze_recursive_backtracker(maze, cur_row, cur_col)
     local rows, cols = #maze, #maze[1]
-    print("rows: ", rows, "cols: ", cols)
     -- Mark this cell as visited
     maze[cur_row][cur_col] = VISITED
 
@@ -110,7 +109,7 @@ function create_maze_recursive_backtracker(maze, cur_row, cur_col)
     shuffleTable(directions)
 
     for i = 1,#directions do
-        dir = directions[i]
+        local dir = directions[i]
 
         --
         -- Get coords for the wall in the selected direction
@@ -134,14 +133,21 @@ function create_maze_recursive_backtracker(maze, cur_row, cur_col)
             next_col = wall_col + 1 
         end
 
-	print("cur row", cur_row, "cur col", cur_col)
-	print("nextl row", next_row, "next col", next_col)
+	--print(" cur row", cur_row,  " cur col", cur_col)
+	--print("next row", next_row, "next col", next_col)
+	--print("wall row", wall_row, "wall col", wall_col)
+    --export_maze(maze)
 
         if is_wall(maze[wall_row][wall_col]) then
 
             if (next_row > 0 and next_row <= rows) and (next_col > 0 and next_col <= cols) then
                 if maze[next_row][next_col] == UNVISITED then
-                    maze[wall_row][wall_col] = PASS -- Turn wall into passage
+
+                    if (wall_col == next_col) then
+                        maze[wall_row][wall_col] = V_PASS -- Turn wall into passage
+                    else
+                        maze[wall_row][wall_col] = H_PASS -- Turn wall into passage
+                    end
 
                     create_maze_recursive_backtracker(maze, next_row, next_col)
                 end
@@ -152,8 +158,14 @@ function create_maze_recursive_backtracker(maze, cur_row, cur_col)
 end
 
 
-function export_maze(maze)
-    local f, errmsg = io.open(export_file, "w")
+function export_maze(maze, outfile)
+    local f, errmsg
+
+    if (outfile == nil) then
+        f = io.stdout
+    else
+        f, errmsg = io.open(export_file, "w")
+    end
 
     if f == nil then
         error(errmsg)
@@ -167,7 +179,12 @@ function export_maze(maze)
     for r = 1,rows do
         f:write("  {")
         for c = 1,#maze[r] do
-            f:write(maze[r][c], ",")
+            if (maze[r][c] < 10) then
+                f:write(string.format(" %d,", maze[r][c]))
+            else 
+                f:write(string.format("%d,", maze[r][c]))
+            end
+            --f:write(maze[r][c], ",")
         end
         f:write(" },\n")
     end
@@ -180,11 +197,11 @@ end
 
 function show_maze_ascii(m)
     io.write(" ")
-    print(string.rep("_", #m[1]))
+    print(string.rep("_", #m[1]-2))
 
     for r = 1,#m do
-        io.write("|")
         if (r % 2 == 0) then
+            io.write("|")
             for c = 1,#m[r] do
                 if (c % 2 == 0) then
                     if is_wall(m[r+1][c]) then -- south wall
@@ -196,21 +213,23 @@ function show_maze_ascii(m)
                     if is_wall(m[r][c+1]) then -- east wall
                         io.write("|")    
                     else 
-                        if not is_wall(m[r][c]) or not is_wall(m[r][c+2]) then
-                            io.write(" ")
-                        else
+                        --if not is_wall(m[r+1][c+1]) or not is_wall(m[r][c+2]) then
+                        --if is_wall(m[r+1][c+1]) and not is_wall(m[r+1][c+2]) then
+                        if is_wall(m[r+1][c+1]) and is_wall(m[r+1][c+2]) then
                             io.write("_")
+                        else
+                            io.write(" ")
                         end
                     end
                 end
             end
+            print()
         end
-        print()
     end
 end
 
 maze = init_maze(rows, cols)
-    export_maze(maze)
+--export_maze(maze)
 create_maze_recursive_backtracker(maze, 2, 2)
 show_maze_ascii(maze)
 io.write("Export to file? [y/n]: ")
@@ -218,5 +237,5 @@ local response = io.read()
 
 if response == "y" then
     print("exporting to", export_file)
-    export_maze(maze)
+    export_maze(maze, export_file)
 end
