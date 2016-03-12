@@ -1,25 +1,21 @@
 --
--- Maze module.
+-- Maze package/object.
 --
+local tm = require("tilemap")
+
 local screenW, screenH = display.contentWidth, display.contentHeight
-local HERE = 0
---local N = 1
-local S = 2
---local W = 3
-local E = 4
-local SE = 5
 
 
 ---
 -- Main maze object
--- @field mazeData  Raw maze data loaded from maze config file.
+-- @field tilemap   Maze tilemap data (2d array of tile identifiers).
 -- @field group     Display group to add maze elements to.
--- @field physics   The physics simulation for the maze's scene.
+-- @field theme     Display theme for this maze.
 --
 local Maze = {
-    --mazeData = nil,
-    --group = nil,
-    --physics = nil,
+    tilemap = nil,
+    group = nil,
+    theme = nil,
 }
 
 ---
@@ -31,7 +27,7 @@ function Maze:new (o)
         error("Maze:new: constructor requires a table as its input parameter")
     end
 
-    if (o.mazeData == nil) then
+    if (o.tilemap == nil) then
         error("Maze:new: constructor table missing 'mazeData' field")
     end
 
@@ -39,49 +35,41 @@ function Maze:new (o)
         error("Maze:new: constructor table missing 'group' field")
     end
 
+    -- Default to test theme
+    if (o.theme == nil) then
+        o.theme = require("theme_crate")
+    end
+
     --o = o or {}
     setmetatable(o, self)
     self.__index = self
 
+    --
+    -- Set convenience variables for number of rows/cols in our tilemap
+    --
+    self.rows = #self.tilemap
+    self.cols = #self.tilemap[1]
+
     return o
-end
-
----
--- Gets the number of rows in the raw maze data.
---
-function Maze:getRows ()
-    --print("Maze:getRows: ", #self.mazeData)
-    return #self.mazeData
-end
-
----
--- Gets the number of columns in the raw maze data.
---
-function Maze:getCols ()
-    --print("Maze:getCols: ", #self.mazeData[1])
-    return #self.mazeData[1]
 end
 
 ---
 -- Gets number of rows and cols needed to display both the maze
 -- passages and walls.
 --
-function Maze:getDisplayDimensions ()
-    return self:getRows() * 2 + 1, self:getCols() * 2 + 1
-end
+--function Maze:getDisplayDimensions ()
+--    return self:getRows() * 2 + 1, self:getCols() * 2 + 1
+--end
 
 ---
--- Based on number of rows and columns in the maze, calculate the best screen
+-- Based on number of rows and columns in the maze tilemap, calculate the best screen
 -- size for the square maze cells.
 --
--- @param rows Needed number of rows.
--- @param cols Needed number of columns.
 -- @return Size to use for square wall images.
 --
 function Maze:calcOptimalCellSize()
-    local displayRows, displayCols = self:getDisplayDimensions()
-    local cellWidth = math.floor(screenW / displayCols)
-    local cellHeight = math.floor(screenH / displayRows)
+    local cellWidth = math.floor(screenW / self.cols)
+    local cellHeight = math.floor(screenH / self.rows)
 
     self.cellSize = math.min(cellWidth, cellHeight)
 end
@@ -91,9 +79,8 @@ end
 -- @returns x,y coords of top left corner of maze.
 --
 function Maze:getStartCoords()
-    local displayRows, displayCols = self:getDisplayDimensions()
-    local totalMazeHeight = self.cellSize * displayRows
-    local totalMazeWidth = self.cellSize * displayCols
+    local totalMazeHeight = self.cellSize * self.rows
+    local totalMazeWidth = self.cellSize * self.cols
 
     local startY = (screenH - totalMazeHeight) / 2
     local startX = (screenW - totalMazeWidth) / 2
@@ -101,94 +88,45 @@ function Maze:getStartCoords()
     return startX, startY
 end
 
----
--- Adds a wall to the maze.
--- @param group Display group to add wall to.
--- @param x X coordinate of cell to add wall to.
--- @param y Y coordinate of cell to add wall to.
--- @param where Position of wall (N, S, SE, or HERE).
---
-function Maze:addWall(x, y, where)
-    local wallX, wallY
-
-    if where == HERE then   wallX, wallY = x, y
-    elseif where == S then  wallX, wallY = x, y + self.cellSize
-    elseif where == E then  wallX, wallY = x + self.cellSize, y
-    elseif where == SE then wallX, wallY = x + self.cellSize, y + self.cellSize
-    end
-
-    local crate = display.newImageRect( "crate.png", self.cellSize, self.cellSize )
-    crate.anchorX = 0
-    crate.anchorY = 0
-    crate.x, crate.y = wallX, wallY
-    self.group:insert(crate)
-    self.physics.addBody(crate, "static", { friction = 0.0 })
-end
 
 ---
 -- Creates the maze on the screen.
--- @param m     Maze matrix.
--- @param group Display group to add maze walls to.
--- @param displayCols Number of display columns needed for maze.
--- @param cellSize    Maze cell size as given by getOptimalCellSize().
--- @param startX      X coordinate to start drawing maze at.
--- @param startY      Y coordinate to start drawing maze at.
 --
 function Maze:display()
     self:calcOptimalCellSize()
-    local startX, startY = self:getStartCoords(self)
-    local displayRows, displayCols = self:getDisplayDimensions()
 
-    local curX = startX
-    local curY = startY
-
+    local disp = display
     --
-    -- Create top border of walls across the entire level.
+    -- Run through each row and col in the maze tilemap creating the maze tiles
     --
-    for i = 1,displayCols do
-        self:addWall(curX, curY, HERE)
-        curX = curX + self.cellSize
-    end
+    for r = 1,self.rows do
 
-    curY = curY + self.cellSize
+        for c = 1,self.cols do
+            local tile = disp.newImageRect(
+                self.group, self.theme[ self.tilemap[r][c] ], self.cellSize, self.cellSize )
 
-    local mazeRows, mazeCols = self:getRows(), self:getCols()
-    --
-    -- Run through each row in the maze data
-    --
-    for r = 1,mazeRows do
-        curX = startX
-
-        -- Add leftmost/western border for this row
-        self:addWall(curX, curY, HERE)
-
-        -- Add corner cap under border
-        self:addWall(curX, curY, S)
-
-        curX = curX + self.cellSize
-
-        for c = 1,mazeCols do
-            -- Add south east corner cap
-            self:addWall(curX, curY, SE)
-
-            -- If there is a south wall, create it
-            if self.mazeData[r][c][S] == 1 then
-                self:addWall(curX, curY, S)
-            end
-
-            -- Move to where east wall would be
-            curX = curX + self.cellSize
-
-            -- If there is a east wall, create it
-            if self.mazeData[r][c][E] == 1 then
-                self:addWall(curX, curY, HERE)
-            end
-
-            curX = curX + self.cellSize
+            tile.anchorX = 0
+            tile.anchorY = 0
+            tile.x = c * self.cellSize
+            tile.y = r * self.cellSize
         end
 
-        curY = curY + self.cellSize*2
     end
+
+    --
+    -- Move display group so that it is centered in the middle of the screen.
+    --
+    local startX, startY = self:getStartCoords(self)
+    self.group.x = startX
+    self.group.y = startY
+end
+
+
+function Maze:isWalkable(x, y)
+    local col = x / self.cellSize
+    local row = y / self.cellSize
+
+    return tm.isWall(self.tilemap[row][col])
 end
 
 return Maze

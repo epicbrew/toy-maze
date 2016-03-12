@@ -2,9 +2,6 @@ local N = 1
 local S = 2
 local W = 3
 local E = 4
-local V = 5
-
-local OPPOSITE = { S, N, E, W }
 
 local NW_WALL = 1
 local SW_WALL = 2
@@ -73,26 +70,6 @@ local function shuffleTable( t )
         j = rand(i)
         t[i], t[j] = t[j], t[i]
     end
-end
-
-function move_coords_by_dir(direction, row, col)
-    local new_row = row
-    local new_col = col
-
-    if dir == N then
-        new_row = new_row - 1    
-    elseif dir == S then
-        new_row = new_row + 1    
-    elseif dir == W then
-        new_col = new_col - 1
-    elseif dir == E then
-        new_col = new_col + 1
-    else
-        print("error: invalid direction:", dir)
-        os.exit(1)
-    end
-
-    return new_row, new_col
 end
 
 function is_wall(val)
