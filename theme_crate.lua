@@ -14,12 +14,12 @@ local theme = {
     [tm.WALL]    = "crate.png",
 
     -- Passages
-    [tm.NW_PASS] = "crate.png",
-    [tm.SW_PASS] = "crate.png",
-    [tm.NE_PASS] = "crate.png",
-    [tm.SE_PASS] = "crate.png",
-    [tm.V_PASS]  = "crate.png",
-    [tm.H_PASS]  = "crate.png",
+    [tm.NW_PASS] = nil,
+    [tm.SW_PASS] = nil,
+    [tm.NE_PASS] = nil,
+    [tm.SE_PASS] = nil,
+    [tm.V_PASS]  = nil,
+    [tm.H_PASS]  = nil,
 }
 
 return theme

@@ -1,18 +1,11 @@
+---
+-- @file level.lua
 --
--- level.lua
+-- Scene for displaying the main game levels.
 --
-
 local Maze = require ("maze")
 local composer = require( "composer" )
 local scene = composer.newScene()
-
--- include Corona's "physics" library
-local physics = require "physics"
-physics.start();
-physics.setGravity(0, 0);
-physics.pause()
-
---------------------------------------------
 
 --
 -- forward declarations and other locals
@@ -63,12 +56,12 @@ local function touchCallback(event)
     return true
 end
 
-local function addPlayer(group, cellSize, row, col, startX, startY)
-    local x = startX + cellSize + (cellSize * 0.5)
-    local y = startY + cellSize + (cellSize * 0.5)
+local function addPlayer(group, startX, startY, cellSize)
+    local x = startX + (cellSize * 0.5)
+    local y = startY + (cellSize * 0.5)
 
 
-    local player = display.newCircle( x, y, cellSize * 0.4 )
+    local player = display.newCircle(group, x, y, cellSize * 0.4 )
     player:setFillColor( 1, 0, 0 )
 
     function player:touch( event )
@@ -113,39 +106,29 @@ local function addPlayer(group, cellSize, row, col, startX, startY)
     --myObject:addEventListener( "touch", myObject )
     Runtime:addEventListener( "touch", player)
     --Runtime:addEventListener( "touch", touchCallback)
-
-    group:insert(player)
-    physics.addBody(player, { friction = 0.0 })
 end
 
 function scene:create( event )
+    --
 	-- Called when the scene's view does not exist.
 	-- 
 	-- INSERT code here to initialize the scene
 	-- e.g. add display objects to 'sceneGroup', add touch listeners, etc.
 
 	local sceneGroup = self.view
-	local params = event.params
-
 	--
 	-- Load up our maze data
 	--
-    print("loading maze data: ", params.mazeData)
-	local levelMazeData = require (params.mazeData)
-
-    --local mazeRows, mazeCols = #mazeData.maze, #mazeData.maze[1]
-    --local displayRows, displayCols = mazeRows*2+1, mazeCols*2+1
-    --local cellSize = getOptimalCellSize(displayRows, displayCols)
+    print("loading maze data: ", event.params.mazeData)
+	local levelMazeData = require (event.params.mazeData)
 
     local mazeGroup = display.newGroup()
     self.maze = Maze:new({
-        mazeData = levelMazeData.maze,
+        tilemap = levelMazeData,
         group = mazeGroup,
-        physics = physics,
     })
 
     self.maze:display()
-
 
 	-- create a grey rectangle as the backdrop
 	local background = display.newRect( 0, 0, screenW, screenH )
@@ -157,9 +140,10 @@ function scene:create( event )
 	sceneGroup:insert( background )
 	sceneGroup:insert( mazeGroup )
 
-    local startX, startY = self.maze:getStartCoords()
+    -- Get coordinates for upper left maze passage/cell
+    local startX, startY = self.maze:getXYForCell(2, 2)
 
-    addPlayer(sceneGroup, self.maze.cellSize, 0, 0, startX, startY)
+    addPlayer(sceneGroup, startX, startY, self.maze.cellSize)
 end
 
 
@@ -174,7 +158,6 @@ function scene:show( event )
 		-- 
 		-- INSERT code here to make the scene come alive
 		-- e.g. start timers, begin animation, play audio, etc.
-		physics.start()
 	end
 end
 
@@ -188,7 +171,6 @@ function scene:hide( event )
 		--
 		-- INSERT code here to pause the scene
 		-- e.g. stop timers, stop animation, unload sounds, etc.)
-		physics.stop()
 	elseif phase == "did" then
 		-- Called when the scene is now off screen
 	end	
@@ -203,8 +185,6 @@ function scene:destroy( event )
 	-- e.g. remove display objects, remove touch listeners, save state, etc.
 	local sceneGroup = self.view
 	
-	package.loaded[physics] = nil
-	physics = nil
 end
 
 ---------------------------------------------------------------------------------

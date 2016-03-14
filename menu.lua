@@ -23,7 +23,8 @@ local function onPlayBtnRelease()
         effect = "fade",
         time = 400,
         params = {
-            mazeData = "maze6x10-1"
+           -- mazeData = "maze6x10-1"
+			mazeData = "maze5x8-1"
         }
     }
 	--composer.gotoScene( "maze", "fade", 500 )

@@ -47,8 +47,8 @@ function Maze:new (o)
     --
     -- Set convenience variables for number of rows/cols in our tilemap
     --
-    self.rows = #self.tilemap
-    self.cols = #self.tilemap[1]
+    o.rows = #o.tilemap
+    o.cols = #o.tilemap[1]
 
     return o
 end
@@ -102,13 +102,16 @@ function Maze:display()
     for r = 1,self.rows do
 
         for c = 1,self.cols do
-            local tile = disp.newImageRect(
-                self.group, self.theme[ self.tilemap[r][c] ], self.cellSize, self.cellSize )
+            --print(r,c, self.tilemap[r][c])
+            local tileImage = self.theme[ self.tilemap[r][c] ]
+            if tileImage then
+                local tile = disp.newImageRect(self.group, tileImage, self.cellSize, self.cellSize )
 
-            tile.anchorX = 0
-            tile.anchorY = 0
-            tile.x = c * self.cellSize
-            tile.y = r * self.cellSize
+                tile.anchorX = 0
+                tile.anchorY = 0
+                tile.x = (c - 1) * self.cellSize
+                tile.y = (r - 1) * self.cellSize
+            end
         end
 
     end
@@ -117,6 +120,7 @@ function Maze:display()
     -- Move display group so that it is centered in the middle of the screen.
     --
     local startX, startY = self:getStartCoords(self)
+    print(startX, startY)
     self.group.x = startX
     self.group.y = startY
 end
@@ -127,6 +131,13 @@ function Maze:isWalkable(x, y)
     local row = y / self.cellSize
 
     return tm.isWall(self.tilemap[row][col])
+end
+
+function Maze:getXYForCell(row, col)
+    local x = col * self.cellSize
+    local y = row * self.cellSize
+
+    return x, y
 end
 
 return Maze
