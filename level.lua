@@ -14,22 +14,110 @@ local screenW, screenH = display.contentWidth, display.contentHeight
 local touchPosition = { x = 0, y = 0 }
 local moveSpeed = 6
 local player
+local levelMaze
 
 local function updatePlayerPosition (event)
     local _player = player
-    local tp = touchPosition
+    --local tp = touchPosition
     local mvSpeed = moveSpeed
+    local testX1, testY1, testX2, testY2
+
+    local tp = {}
+    tp.x, tp.y = _player.parent:contentToLocal(touchPosition.x, touchPosition.y)
+
+    local pxMin, pyMin = _player.parent:contentToLocal(_player.contentBounds.xMin, _player.contentBounds.yMin)
+    local pxMax, pyMax = _player.parent:contentToLocal(_player.contentBounds.xMax, _player.contentBounds.yMax)
+
+    print(tp.x, tp.y, touchPosition.x, touchPosition.y)
+
+    --[[
+    local xMove = tp.x - _player.x
+
+    if xMove < 0 then
+        xMove = math.max(mvSpeed, xMove)
+        testX1 = pxMin + mvSpeed
+    else
+        xMove = math.min(mvSpeed, xMove)
+        testX1 = pxMax + mvSpeed
+    end
+
+    testY1 = pyMin
+    testX2 = testX1
+    testY2 = pyMax
+
+    print( testX1, testY1, testX2, testY2)
+
+    if levelMaze:isWalkable(testX1, testY1) and levelMaze:isWalkable(testX2, testY2) then
+        _player.x = _player.x + mvSpeed
+    end
+
+    local yMove = tp.y - _player.y
+
+    if yMove < 0 then
+        yMove = math.max(mvSpeed, yMove)
+        testY1 = pyMin + mvSpeed
+    else
+        yMove = math.min(mvSpeed, yMove)
+        testY1 = pyMax + mvSpeed
+    end
+
+    testX1 = pxMin
+    testX2 = pxMax
+    testY2 = testY1
+
+    if levelMaze:isWalkable(testX1, testY1) and levelMaze:isWalkable(testX2, testY2) then
+        _player.y = _player.y + mvSpeed
+    end
+    ]]--
+    ----------------
+
+    local mvAmount
 
     if tp.x > _player.x then
-        _player.x = _player.x + mvSpeed
+        mvAmount = math.min(mvSpeed, tp.x - _player.x)
+
+        testX1 = pxMax + mvAmount
+        testY1 = pyMin
+        testX2 = testX1
+        testY2 = pyMax
+
+        if levelMaze:isWalkable(testX1, testY1) and levelMaze:isWalkable(testX2, testY2) then
+            _player.x = _player.x + mvSpeed
+        end
     else
-        _player.x = _player.x - mvSpeed
+        mvAmount = math.min(mvSpeed, _player.x - tp.x)
+
+        testX1 = pxMin - mvAmount
+        testY1 = pyMin
+        testX2 = testX1
+        testY2 = pyMax
+
+        if levelMaze:isWalkable(testX1, testY1) and levelMaze:isWalkable(testX2, testY2) then
+            _player.x = _player.x - mvSpeed
+        end
     end
 
     if tp.y > _player.y then
-        _player.y = _player.y + mvSpeed
+        mvAmount = math.min(mvSpeed, tp.y - _player.y)
+
+        testX1 = pxMax
+        testY1 = pyMax + mvAmount
+        testX2 = pxMin
+        testY2 = testY1
+
+        if levelMaze:isWalkable(testX1, testY1) and levelMaze:isWalkable(testX2, testY2) then
+            _player.y = _player.y + mvSpeed
+        end
     else
-        _player.y = _player.y - mvSpeed
+        mvAmount = math.min(mvSpeed, _player.y - tp.y)
+
+        testX1 = pxMax
+        testY1 = pyMin - mvAmount
+        testX2 = pxMin
+        testY2 = testY1
+        if levelMaze:isWalkable(testX1, testY1) and levelMaze:isWalkable(testX2, testY2) then
+            _player.y = _player.y - mvSpeed
+        end
     end
 end
 
@@ -60,10 +148,11 @@ local function addPlayer(group, startX, startY, cellSize)
     local x = startX + (cellSize * 0.5)
     local y = startY + (cellSize * 0.5)
 
-
-    local player = display.newCircle(group, x, y, cellSize * 0.4 )
+    --local player = display.newCircle(group, x, y, cellSize * 0.4 )
+    player = display.newCircle(group, x, y, cellSize * 0.4 )
     player:setFillColor( 1, 0, 0 )
 
+    --[[
     function player:touch( event )
         if event.phase == "moved" then
             if event.x > self.x then
@@ -82,6 +171,7 @@ local function addPlayer(group, startX, startY, cellSize)
 
         return true
     end
+    ]]--
 
     --[[
     function myObject:touch( event )
@@ -104,8 +194,8 @@ local function addPlayer(group, startX, startY, cellSize)
 
     -- make 'myObject' listen for touch events
     --myObject:addEventListener( "touch", myObject )
-    Runtime:addEventListener( "touch", player)
-    --Runtime:addEventListener( "touch", touchCallback)
+    --Runtime:addEventListener( "touch", player)
+    Runtime:addEventListener( "touch", touchCallback)
 end
 
 function scene:create( event )
@@ -128,7 +218,16 @@ function scene:create( event )
         group = mazeGroup,
     })
 
+    --
+    -- TODO: maybe I don't need the self.maze reference.
+    --
+    levelMaze = self.maze
+
     self.maze:display()
+
+    -- Get coordinates for upper left maze passage/cell
+    local startX, startY = self.maze:getXYForCell(2, 2)
+    addPlayer(mazeGroup, startX, startY, self.maze.cellSize)
 
 	-- create a grey rectangle as the backdrop
 	local background = display.newRect( 0, 0, screenW, screenH )
@@ -140,10 +239,6 @@ function scene:create( event )
 	sceneGroup:insert( background )
 	sceneGroup:insert( mazeGroup )
 
-    -- Get coordinates for upper left maze passage/cell
-    local startX, startY = self.maze:getXYForCell(2, 2)
-
-    addPlayer(sceneGroup, startX, startY, self.maze.cellSize)
 end
 
 
