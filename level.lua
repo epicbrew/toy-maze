@@ -4,6 +4,7 @@
 -- Scene for displaying the main game levels.
 --
 local Maze = require ("maze")
+local Player = require ("player")
 local composer = require( "composer" )
 local scene = composer.newScene()
 
@@ -11,192 +12,7 @@ local scene = composer.newScene()
 -- forward declarations and other locals
 --
 local screenW, screenH = display.contentWidth, display.contentHeight
-local touchPosition = { x = 0, y = 0 }
-local moveSpeed = 6
-local player
-local levelMaze
 
-local function updatePlayerPosition (event)
-    local _player = player
-    --local tp = touchPosition
-    local mvSpeed = moveSpeed
-    local testX1, testY1, testX2, testY2
-
-    local tp = {}
-    tp.x, tp.y = _player.parent:contentToLocal(touchPosition.x, touchPosition.y)
-
-    local pxMin, pyMin = _player.parent:contentToLocal(_player.contentBounds.xMin, _player.contentBounds.yMin)
-    local pxMax, pyMax = _player.parent:contentToLocal(_player.contentBounds.xMax, _player.contentBounds.yMax)
-
-    print(tp.x, tp.y, touchPosition.x, touchPosition.y)
-
-    --[[
-    local xMove = tp.x - _player.x
-
-    if xMove < 0 then
-        xMove = math.max(mvSpeed, xMove)
-        testX1 = pxMin + mvSpeed
-    else
-        xMove = math.min(mvSpeed, xMove)
-        testX1 = pxMax + mvSpeed
-    end
-
-    testY1 = pyMin
-    testX2 = testX1
-    testY2 = pyMax
-
-    print( testX1, testY1, testX2, testY2)
-
-    if levelMaze:isWalkable(testX1, testY1) and levelMaze:isWalkable(testX2, testY2) then
-        _player.x = _player.x + mvSpeed
-    end
-
-    local yMove = tp.y - _player.y
-
-    if yMove < 0 then
-        yMove = math.max(mvSpeed, yMove)
-        testY1 = pyMin + mvSpeed
-    else
-        yMove = math.min(mvSpeed, yMove)
-        testY1 = pyMax + mvSpeed
-    end
-
-    testX1 = pxMin
-    testX2 = pxMax
-    testY2 = testY1
-
-    if levelMaze:isWalkable(testX1, testY1) and levelMaze:isWalkable(testX2, testY2) then
-        _player.y = _player.y + mvSpeed
-    end
-    ]]--
-    ----------------
-
-    local mvAmount
-
-    if tp.x > _player.x then
-        mvAmount = math.min(mvSpeed, tp.x - _player.x)
-
-        testX1 = pxMax + mvAmount
-        testY1 = pyMin
-        testX2 = testX1
-        testY2 = pyMax
-
-        if levelMaze:isWalkable(testX1, testY1) and levelMaze:isWalkable(testX2, testY2) then
-            _player.x = _player.x + mvSpeed
-        end
-    else
-        mvAmount = math.min(mvSpeed, _player.x - tp.x)
-
-        testX1 = pxMin - mvAmount
-        testY1 = pyMin
-        testX2 = testX1
-        testY2 = pyMax
-
-        if levelMaze:isWalkable(testX1, testY1) and levelMaze:isWalkable(testX2, testY2) then
-            _player.x = _player.x - mvSpeed
-        end
-    end
-
-    if tp.y > _player.y then
-        mvAmount = math.min(mvSpeed, tp.y - _player.y)
-
-        testX1 = pxMax
-        testY1 = pyMax + mvAmount
-        testX2 = pxMin
-        testY2 = testY1
-
-        if levelMaze:isWalkable(testX1, testY1) and levelMaze:isWalkable(testX2, testY2) then
-            _player.y = _player.y + mvSpeed
-        end
-    else
-        mvAmount = math.min(mvSpeed, _player.y - tp.y)
-
-        testX1 = pxMax
-        testY1 = pyMin - mvAmount
-        testX2 = pxMin
-        testY2 = testY1
-        if levelMaze:isWalkable(testX1, testY1) and levelMaze:isWalkable(testX2, testY2) then
-            _player.y = _player.y - mvSpeed
-        end
-    end
-end
-
-local function addFrameListener ()
-    Runtime:addEventListener("enterFrame", updatePlayerPosition)
-end
-
-local function removeFrameListener ()
-    Runtime:removeEventListener("enterFrame", updatePlayerPosition)
-end
-
-local function touchCallback(event)
-    if event.phase == "began" then
-        touchPosition.x = event.x
-        touchPosition.y = event.y
-        timer.performWithDelay(1, addFrameListener)
-    elseif event.phase == "moved" then
-        touchPosition.x = event.x
-        touchPosition.y = event.y
-    elseif event.phase == "ended" then
-        timer.performWithDelay(1, removeFrameListener)
-    end
-
-    return true
-end
-
-local function addPlayer(group, startX, startY, cellSize)
-    local x = startX + (cellSize * 0.5)
-    local y = startY + (cellSize * 0.5)
-
-    --local player = display.newCircle(group, x, y, cellSize * 0.4 )
-    player = display.newCircle(group, x, y, cellSize * 0.4 )
-    player:setFillColor( 1, 0, 0 )
-
-    --[[
-    function player:touch( event )
-        if event.phase == "moved" then
-            if event.x > self.x then
-                self.x = self.x + 5
-            else
-                self.x = self.x - 5
-            end
-
-            if event.y > self.y then
-                self.y = self.y + 5
-            else
-                self.y = self.y - 5
-            end
-
-        end
-
-        return true
-    end
-    ]]--
-
-    --[[
-    function myObject:touch( event )
-        if event.phase == "began" then
-
-            self.markX = self.x    -- store x location of object
-            self.markY = self.y    -- store y location of object
-
-        elseif event.phase == "moved" then
-
-            local x = (event.x - event.xStart) + self.markX
-            local y = (event.y - event.yStart) + self.markY
-
-            self.x, self.y = x, y    -- move object based on calculations above
-        end
-
-        return true
-    end
-    ]]--
-
-    -- make 'myObject' listen for touch events
-    --myObject:addEventListener( "touch", myObject )
-    --Runtime:addEventListener( "touch", player)
-    Runtime:addEventListener( "touch", touchCallback)
-end
 
 function scene:create( event )
     --
@@ -204,30 +20,34 @@ function scene:create( event )
 	-- 
 	-- INSERT code here to initialize the scene
 	-- e.g. add display objects to 'sceneGroup', add touch listeners, etc.
-
 	local sceneGroup = self.view
+
 	--
 	-- Load up our maze data
 	--
     print("loading maze data: ", event.params.mazeData)
 	local levelMazeData = require (event.params.mazeData)
 
-    local mazeGroup = display.newGroup()
+	--
+	-- Create our maze
+	--
     self.maze = Maze:new({
         tilemap = levelMazeData,
-        group = mazeGroup,
+        group = display.newGroup(),
     })
 
-    --
-    -- TODO: maybe I don't need the self.maze reference.
-    --
-    levelMaze = self.maze
+    self.maze:create()
 
-    self.maze:display()
+	--
+	-- Add the player to the maze.
+	--
+    self.player = Player:new(self.maze)
 
-    -- Get coordinates for upper left maze passage/cell
-    local startX, startY = self.maze:getXYForCell(2, 2)
-    addPlayer(mazeGroup, startX, startY, self.maze.cellSize)
+    --
+    -- This gives the Player module a reference to our player so that it can be moved around
+    -- by Runtime touch events.
+    --
+    Player.setCurrent(self.player)
 
 	-- create a grey rectangle as the backdrop
 	local background = display.newRect( 0, 0, screenW, screenH )
@@ -237,8 +57,7 @@ function scene:create( event )
 	
 	-- all display objects must be inserted into group
 	sceneGroup:insert( background )
-	sceneGroup:insert( mazeGroup )
-
+	sceneGroup:insert( self.maze.group )
 end
 
 
@@ -248,6 +67,9 @@ function scene:show( event )
 	
 	if phase == "will" then
 		-- Called when the scene is still off screen and is about to move on screen
+
+		self.player:putAtStartPosition()
+
 	elseif phase == "did" then
 		-- Called when the scene is now on screen
 		-- 

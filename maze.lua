@@ -93,7 +93,7 @@ end
 ---
 -- Creates the maze on the screen.
 --
-function Maze:display()
+function Maze:create()
     self:calcOptimalCellSize()
 
     local disp = display
@@ -139,7 +139,7 @@ function Maze:isWalkable(x, y)
     local row = math.floor(y / self.cellSize) + 1
 
     local result = not tm.isWall(self.tilemap[row][col])
-    print("iswalkable", row, col, self.tilemap[row][col], result)
+    --print("iswalkable", row, col, self.tilemap[row][col], result)
 
     return result
 end
