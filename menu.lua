@@ -13,7 +13,7 @@ local widget = require "widget"
 --------------------------------------------
 
 -- forward declarations and other locals
-local playBtn
+local playBtn, createBtn
 
 -- 'onRelease' event listener for playBtn
 local function onPlayBtnRelease()
@@ -31,6 +31,19 @@ local function onPlayBtnRelease()
     composer.gotoScene( "level", options )
 
 	return true	-- indicates successful touch
+end
+
+local function onCreateBtnRelease()
+
+    -- go to level1.lua scene
+    local options = {
+        effect = "fade",
+        time = 200,
+    }
+    --composer.gotoScene( "maze", "fade", 500 )
+    composer.gotoScene( "level_creator", options )
+
+    return true	-- indicates successful touch
 end
 
 function scene:create( event )
@@ -63,11 +76,23 @@ function scene:create( event )
 	}
 	playBtn.x = display.contentWidth*0.5
 	playBtn.y = display.contentHeight - 125
-	
+
+	createBtn = widget.newButton{
+		label="Creator",
+		labelColor = { default={255}, over={128} },
+		default="button.png",
+		over="button-over.png",
+		width=154, height=80,
+		onRelease = onCreateBtnRelease	-- event listener function
+	}
+	createBtn.x = display.contentWidth*0.25
+	createBtn.y = display.contentHeight - 125
+
 	-- all display objects must be inserted into group
 	sceneGroup:insert( background )
 	sceneGroup:insert( titleLogo )
 	sceneGroup:insert( playBtn )
+    sceneGroup:insert( createBtn )
 end
 
 function scene:show( event )
@@ -109,7 +134,12 @@ function scene:destroy( event )
 	if playBtn then
 		playBtn:removeSelf()	-- widgets must be manually removed
 		playBtn = nil
-	end
+    end
+
+    if createBtn then
+        createBtn:removeSelf()	-- widgets must be manually removed
+        createBtn = nil
+    end
 end
 
 ---------------------------------------------------------------------------------

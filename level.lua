@@ -33,7 +33,6 @@ function scene:create( event )
 	--
     self.maze = Maze:new({
         tilemap = levelMazeData,
-        group = display.newGroup(),
     })
 
     self.maze:create()

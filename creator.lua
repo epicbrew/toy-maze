@@ -5,10 +5,10 @@ local S = 2
 local W = 3
 local E = 4
 
-local rows = tonumber(arg[1])
-local cols = tonumber(arg[2])
+--local rows = tonumber(arg[1])
+--local cols = tonumber(arg[2])
 --local start_col = tonumber(arg[3])
-local export_file = arg[3]
+--local export_file = arg[3]
 
 math.randomseed(os.time())
 
@@ -146,6 +146,16 @@ local function export_maze(maze, outfile)
         f:write(" },\n")
     end
 
+    print "end row:"
+    local endrow = io.read()
+
+    f:write(string.format(" endrow = %s,", endrow))
+
+    print "end col:"
+    local endcol = io.read()
+
+    f:write(string.format(" endcol = %s,", endcol))
+
     f:write("}\n")
     f:write("\nreturn maze")
     f:flush()
@@ -186,6 +196,7 @@ local function show_maze_ascii(m)
     end
 end
 
+--[[
 local maze = init_maze(rows, cols)
 --export_maze(maze)
 create_maze_recursive_backtracker(maze, 2, 2)
@@ -197,3 +208,16 @@ if response == "y" then
     print("exporting to", export_file)
     export_maze(maze, export_file)
 end
+]]--
+
+local function generateMaze(numRows, numCols)
+    local maze = init_maze(numRows, numCols)
+    create_maze_recursive_backtracker(maze, 2, 2)
+    return maze
+end
+
+local M = {
+    generateMaze = generateMaze,
+}
+
+return M

@@ -94,6 +94,8 @@ end
 -- Creates the maze on the screen.
 --
 function Maze:create()
+    self.group = display.newGroup()
+
     self:calcOptimalCellSize()
 
     local disp = display
@@ -124,6 +126,11 @@ function Maze:create()
     print(startX, startY)
     self.group.x = startX
     self.group.y = startY
+end
+
+
+function Maze:destroy()
+    self.group:removeSelf()
 end
 
 
