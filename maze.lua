@@ -31,10 +31,6 @@ function Maze:new (o)
         error("Maze:new: constructor table missing 'mazeData' field")
     end
 
-    if (o.group == nil) then
-        error("Maze:new: constructor table missing 'group' field")
-    end
-
     -- Default to test theme
     if (o.theme == nil) then
         o.theme = require("theme_crate")
